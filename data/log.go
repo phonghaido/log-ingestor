@@ -1,7 +1,7 @@
 package data
 
 type Metadata struct {
-	ParentResourceID string
+	ParentResourceID string `json:"parentResourceId"`
 }
 
 type LogData struct {
