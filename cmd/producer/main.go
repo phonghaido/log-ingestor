@@ -23,7 +23,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	if err := kafkaProducer.CreateKafkaTopic(); err != nil {
-		log.Fatalf("Failed to create topic %s", err)
+		log.Printf("Failed to create topic %s", err)
 	}
 
 	log.Println("Server listing on port 3000...")

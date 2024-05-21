@@ -19,41 +19,28 @@ type KafkaProducer struct {
 func NewKafkaProducer(kafkaConfig data.KafkaConfig) *KafkaProducer {
 	return &KafkaProducer{
 		KafkaConfig: kafkaConfig,
-		Writer: *kafka.NewWriter(kafka.WriterConfig{
-			Brokers: []string{kafkaConfig.KafkaBroker},
-			Topic:   kafkaConfig.Topic,
-		}),
+		Writer:      data.NewKafkaWriter(kafkaConfig),
 	}
-}
-
-func (p *KafkaProducer) ConnectToKafka() (*kafka.Conn, error) {
-	conn, err := kafka.Dial("tcp", p.KafkaConfig.KafkaBroker)
-	if err != nil {
-		log.Println("Error connecting to Kafka")
-		return nil, err
-	}
-
-	return conn, nil
-}
-
-func (p *KafkaProducer) CheckTopicExist(conn *kafka.Conn) (bool, error) {
-	partitions, err := conn.ReadPartitions()
-	if err != nil {
-		log.Println("Error reading Kafka partitions")
-		return false, err
-	}
-	for _, partition := range partitions {
-		if partition.Topic == p.KafkaConfig.Topic {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func (p *KafkaProducer) CreateKafkaTopic() error {
-	conn, err := p.ConnectToKafka()
+	conn, err := kafka.Dial("tcp", p.KafkaConfig.KafkaBroker)
 	if err != nil {
+		log.Println("Error connecting to Kafka")
 		return err
+	}
+	defer conn.Close()
+
+	partitions, err := conn.ReadPartitions()
+	if err != nil {
+		log.Println("Error reading Kafka partitions")
+		return err
+	}
+	for _, partition := range partitions {
+		if partition.Topic == p.KafkaConfig.Topic {
+			log.Printf("Topic %s already existed", p.KafkaConfig.Topic)
+			return nil
+		}
 	}
 
 	controller, err := conn.Controller()
@@ -79,17 +66,14 @@ func (p *KafkaProducer) CreateKafkaTopic() error {
 	}
 	err = controllerConn.CreateTopics(topicConfig...)
 	if err != nil {
-		log.Printf("Error creating topic %s", p.KafkaConfig.Topic)
+		log.Fatalf("Error creating topic %s", p.KafkaConfig.Topic)
 		return err
 	}
 	log.Printf("Topic %s created successfully", p.KafkaConfig.Topic)
-
 	return nil
 }
 
 func (p *KafkaProducer) ProduceLogKafka(logData data.LogData) error {
-	defer p.Writer.Close()
-
 	logBytes, err := json.Marshal(logData)
 	if err != nil {
 		log.Println("Error marshalling log data")
@@ -99,6 +83,6 @@ func (p *KafkaProducer) ProduceLogKafka(logData data.LogData) error {
 	err = p.Writer.WriteMessages(context.Background(), kafka.Message{
 		Value: logBytes,
 	})
-	log.Println(err.Error())
+	log.Printf("Produce Message: %v\n to Kafka Topic %s successfully", logData, p.KafkaConfig.Topic)
 	return err
 }

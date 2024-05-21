@@ -1,6 +1,10 @@
 package data
 
-import "github.com/segmentio/kafka-go"
+import (
+	"log"
+
+	"github.com/segmentio/kafka-go"
+)
 
 type KafkaConfig struct {
 	KafkaBroker  string
@@ -18,9 +22,18 @@ func NewKafkaConfig(kafkaBroker, topic string, numPartition, replication int) *K
 	}
 }
 
-func NewKafkaWriter(kafkaConfig KafkaConfig) *kafka.Writer {
-	return kafka.NewWriter(kafka.WriterConfig{
+func NewKafkaWriter(kafkaConfig KafkaConfig) kafka.Writer {
+	log.Printf("Initializing Kafka writer for broker %s and topic %s", kafkaConfig.KafkaBroker, kafkaConfig.Topic)
+	return *kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{kafkaConfig.KafkaBroker},
 		Topic:   kafkaConfig.Topic,
+	})
+}
+
+func NewKafkaReader(kafkaConfig KafkaConfig) kafka.Reader {
+	return *kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{kafkaConfig.KafkaBroker},
+		Topic:   kafkaConfig.Topic,
+		GroupID: "log-processor",
 	})
 }
