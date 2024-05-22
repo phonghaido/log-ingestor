@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/phonghaido/log-ingestor/cmd/consumer/handlers"
 	"github.com/phonghaido/log-ingestor/data"
+	"github.com/phonghaido/log-ingestor/handlers"
 )
 
 var (
