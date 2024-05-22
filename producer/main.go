@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	kafkaConfig   = data.NewKafkaConfig("localhost:9092", "logs", 1, 1)
+	kafkaConfig   = helpers.ReadKafkaConfig()
 	kafkaProducer = handlers.NewKafkaProducer(*kafkaConfig)
 )
 

@@ -7,6 +7,8 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
       - "2181:2181"
+    networks:
+      - log-ingestor-internal
 
   kafka:
     image: bitnami/kafka:latest
@@ -17,13 +19,16 @@ services:
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
       - ALLOW_PLAINTEXT_LISTENER=yes
     healthcheck:
-      test: ["CMD", "kafka-topics.sh", "--bootstrap-server=localhost:9092", "--list"]
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server=kafka:9092", "--list"]
       start_period: 15s
       interval: 10s
+    networks:
+      - log-ingestor-internal
+    hostname: kafka
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:latest
@@ -40,18 +45,40 @@ services:
       - CONNECT_STATUS_STORAGE_TOPIC=docker-connect-status
       - CONNECT_KEY_CONVERTER=org.apache.kafka.connect.storage.StringConverter
       - CONNECT_VALUE_CONVERTER=org.apache.kafka.connect.storage.StringConverter
-      - CONNECT_REST_ADVERTISED_HOST_NAME=localhost
+      - CONNECT_REST_ADVERTISED_HOST_NAME=kafka
       - CONNECT_PLUGIN_PATH=/usr/share/java
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - log-ingestor-internal
 
-volumes:
-  esdata:
+  producer:
+    image: producer
+    build:
+      context: .
+      dockerfile: 'Dockerfile.producer'
+    ports:
+      - '3000:3000'
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - KAFKA_TOPIC=logs
+      - NUM_PARTITION=1
+      - REPLICATION=1
+    networks:
+      - log-ingestor-internal
+    hostname: producer
+
+  consumer:
+    image: consumer
+    build:
+      context: .
+      dockerfile: 'Dockerfile.consumer'
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - KAFKA_TOPIC=logs
+      - NUM_PARTITION=1
+      - REPLICATION=1
+      - PRODUCER=http://producer:3000
+    networks:
+      - log-ingestor-internal
+
+networks:
+  log-ingestor-internal:

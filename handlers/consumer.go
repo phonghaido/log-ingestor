@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/lib/pq"
 	"github.com/phonghaido/log-ingestor/data"
-	"github.com/phonghaido/log-ingestor/db"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -43,18 +43,6 @@ func (c *KafkaConsumer) ConsumeLogKafka() {
 			continue
 		}
 
-		postgresql := db.NewPostgresql("postgresql://postgres:password@localhost:5432")
-		db, err := postgresql.Connect()
-		if err != nil {
-			log.Printf("Error connecting to PostgreSQL %s\n", err.Error())
-			continue
-		}
-		err = postgresql.Insert(db, logData)
-		if err != nil {
-			log.Printf("Error inserting data to table %s\n", err.Error())
-			continue
-		}
-
 		err = SendAcknowledgement(logData.TraceID)
 		if err != nil {
 			log.Printf("Error sending acknowledgement: %s", err.Error())
@@ -64,7 +52,7 @@ func (c *KafkaConsumer) ConsumeLogKafka() {
 }
 
 func SendAcknowledgement(logID string) error {
-	url := "http://localhost:3000/ack"
+	url := os.Getenv("PRODUCER") + "/ack"
 	ackData := map[string]string{"logId": logID}
 
 	ackBytes, err := json.Marshal(ackData)
