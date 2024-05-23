@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/phonghaido/log-ingestor/data"
+	"github.com/phonghaido/log-ingestor/db"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -28,9 +29,9 @@ func NewKafkaConsumer(kafkaConfig data.KafkaConfig) *KafkaConsumer {
 
 func (c *KafkaConsumer) ConsumeLogKafka() {
 	defer c.Reader.Close()
-
+	ctx := context.Background()
 	for {
-		msg, err := c.Reader.ReadMessage(context.Background())
+		msg, err := c.Reader.ReadMessage(ctx)
 		if err != nil {
 			log.Printf("Failed to read message: %s\n", err.Error())
 			continue
@@ -42,6 +43,20 @@ func (c *KafkaConsumer) ConsumeLogKafka() {
 			log.Printf("Error decoding message %s\n", err.Error())
 			continue
 		}
+
+		mongoClient, err := db.ConnectToMongoDB(ctx)
+		if err != nil {
+			log.Printf("Error connecting to mongodb %s", err.Error())
+			continue
+		}
+
+		err = db.InsertToDB(ctx, mongoClient, logData)
+		if err != nil {
+			log.Printf("Error inserting record to mongodb collection %s", err.Error())
+			continue
+		}
+
+		log.Printf("Insert record %s to mongodb collection successfully", logData.TraceID)
 
 		err = SendAcknowledgement(logData.TraceID)
 		if err != nil {

@@ -77,8 +77,21 @@ services:
       - NUM_PARTITION=1
       - REPLICATION=1
       - PRODUCER=http://producer:3000
+      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+      - MONGODB_DATABASE=log_ingestor
+      - MONGODB_COLLECTION=logs
     networks:
       - log-ingestor-internal
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - log-ingestor-internal
+    hostname: mongodb
 
 networks:
   log-ingestor-internal:
