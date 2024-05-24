@@ -15,7 +15,7 @@ import (
 
 func main() {
 	url := "http://localhost:3000/log"
-	numReqs := 4000
+	numReqs := 1000
 	logLevels := []string{"info", "error", "debug", "warning"}
 
 	var wg sync.WaitGroup
