@@ -1,0 +1,14 @@
+{{ define "result" }}
+<div class="log-entry">
+	<h3>Log Entry</h3>
+	<p><strong>Level:</strong> {{ .Level }}</p>
+	<p><strong>Message:</strong> {{ .Message }}</p>
+	<p><strong>Resource ID:</strong> {{ .ResourceID }}</p>
+	<p><strong>Timestamp:</strong> {{ .Timestamp }}</p>
+	<p><strong>Trace ID:</strong> {{ .TraceID }}</p>
+	<p><strong>Span ID:</strong> {{ .SpanID }}</p>
+	<p><strong>Commit:</strong> {{ .Commit }}</p>
+	<p><strong>Parent Resource ID:</strong> {{ .Metadata.ParentResourceID }}</p>
+</div>
+<hr>
+{{ end }}

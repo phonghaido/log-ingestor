@@ -14,3 +14,12 @@ type LogData struct {
 	Commit     string   `json:"commit"`
 	Metadata   Metadata `json:"metadata"`
 }
+
+type SearchData struct {
+	Level      string
+	ResourceID string
+	TraceID    string
+	SpanID     string
+	StartDate  string
+	EndDate    string
+}

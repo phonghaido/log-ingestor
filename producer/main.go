@@ -46,7 +46,7 @@ func HandlePostLog(c echo.Context) error {
 		return err
 	}
 
-	ok, err := kafkaProducer.WaitForAck(traceID, 10*time.Second)
+	ok, err := kafkaProducer.WaitForAck(traceID, 60*time.Second)
 	if !ok {
 		return err
 	}

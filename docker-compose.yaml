@@ -93,5 +93,19 @@ services:
       - log-ingestor-internal
     hostname: mongodb
 
+  logsearch:
+    image: logsearch
+    build:
+      context: .
+      dockerfile: 'Dockerfile.logsearch'
+    networks:
+      - log-ingestor-internal
+    environment:
+      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+      - MONGODB_DATABASE=log_ingestor
+      - MONGODB_COLLECTION=logs
+    ports:
+      - "8080:8080"
+
 networks:
   log-ingestor-internal:

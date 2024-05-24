@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Search Interface</title>
+	<script src="https://unpkg.com/htmx.org@1.4.0"></script>
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			height: 100vh;
+			margin: 0;
+		}
+
+		#search-form {
+			padding: 20px;
+			background-color: #f4f4f4;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			z-index: 1000;
+		}
+
+		#results-container {
+			flex: 1;
+			overflow-y: auto;
+			padding: 20px;
+			background-color: #fff;
+		}
+
+		.log-entry {
+			margin-bottom: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>Search Form</h1>
+	<form hx-post="/search" hx-trigger="submit" hx-target="#results">
+		<label for="level">Level:</label>
+		<input type="text" id="level" name="level"><br><br>
+
+		<label for="resourceID">Resource ID:</label>
+		<input type="text" id="resourceID" name="resourceID"><br><br>
+
+		<label for="startDate">Start Date:</label>
+		<input type="datetime-local" id="startDate" name="startDate"><br><br>
+
+		<label for="endDate">End Date:</label>
+		<input type="datetime-local" id="endDate" name="endDate"><br><br>
+
+		<label for="traceID">Trace ID:</label>
+		<input type="text" id="traceID" name="traceID"><br><br>
+
+		<label for="spanID">Span ID:</label>
+		<input type="text" id="spanID" name="spanID"><br><br>
+
+		<button type="submit">Search</button>
+	</form>
+	<div id="results-container">
+		<div id="results"></div>
+	</div>
+</body>
+
+</html>
