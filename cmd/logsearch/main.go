@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/phonghaido/log-ingestor/data"
 	"github.com/phonghaido/log-ingestor/db"
+	"github.com/phonghaido/log-ingestor/types"
 )
 
 func main() {
@@ -35,7 +35,7 @@ func HandlePostSearch(c echo.Context) error {
 	startDate := c.FormValue("startDate")
 	endDate := c.FormValue("endDate")
 
-	searchData := data.SearchData{
+	searchData := types.SearchData{
 		Level:      level,
 		ResourceID: resourceID,
 		TraceID:    traceID,

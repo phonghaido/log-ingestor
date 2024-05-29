@@ -1,4 +1,4 @@
-package handlers
+package kafka
 
 import (
 	"bytes"
@@ -10,26 +10,30 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
-	"github.com/phonghaido/log-ingestor/data"
-	"github.com/phonghaido/log-ingestor/db"
+	"github.com/phonghaido/log-ingestor/types"
 	"github.com/segmentio/kafka-go"
 )
 
-type KafkaConsumer struct {
-	KafkaConfig data.KafkaConfig
-	Reader      kafka.Reader
+type LogPersister interface {
+	PersistLog(context.Context, types.LogData) error
 }
 
-func NewKafkaConsumer(kafkaConfig data.KafkaConfig) *KafkaConsumer {
+type KafkaConsumer struct {
+	KafkaConfig types.KafkaConfig
+	Reader      kafka.Reader
+	Persister   LogPersister
+}
+
+func NewKafkaConsumer(kafkaConfig types.KafkaConfig, logPersister LogPersister) *KafkaConsumer {
 	return &KafkaConsumer{
 		KafkaConfig: kafkaConfig,
-		Reader:      data.NewKafkaReader(kafkaConfig),
+		Reader:      types.NewKafkaReader(kafkaConfig),
+		Persister:   logPersister,
 	}
 }
 
-func (c *KafkaConsumer) ConsumeLogKafka() {
+func (c *KafkaConsumer) ConsumeLogKafka(ctx context.Context) {
 	defer c.Reader.Close()
-	ctx := context.Background()
 	for {
 		msg, err := c.Reader.ReadMessage(ctx)
 		if err != nil {
@@ -37,22 +41,14 @@ func (c *KafkaConsumer) ConsumeLogKafka() {
 			continue
 		}
 		log.Printf("Received message: %s\n", string(msg.Value))
-		var logData data.LogData
+		var logData types.LogData
 		err = json.Unmarshal(msg.Value, &logData)
 		if err != nil {
 			log.Printf("Error decoding message %s\n", err.Error())
 			continue
 		}
 
-		mongoClient, err := db.ConnectToMongoDB(ctx)
-		if err != nil {
-			log.Printf("Error connecting to mongodb %s", err.Error())
-			continue
-		}
-
-		err = db.InsertToDB(ctx, mongoClient, logData)
-		if err != nil {
-			log.Printf("Error inserting record to mongodb collection %s", err.Error())
+		if err := c.Persister.PersistLog(ctx, logData); err != nil {
 			continue
 		}
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
-	"github.com/phonghaido/log-ingestor/data"
+	"github.com/phonghaido/log-ingestor/types"
 )
 
 type PostgreSQL struct {
@@ -27,7 +27,7 @@ func (p *PostgreSQL) Connect() (*sql.DB, error) {
 	return db, nil
 }
 
-func (p *PostgreSQL) Insert(db *sql.DB, data data.LogData) error {
+func (p *PostgreSQL) Insert(db *sql.DB, data types.LogData) error {
 	defer db.Close()
 	metadataJSON, err := json.Marshal(data.Metadata)
 	if err != nil {

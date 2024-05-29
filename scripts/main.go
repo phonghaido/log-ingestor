@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/phonghaido/log-ingestor/data"
+	"github.com/phonghaido/log-ingestor/types"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 			defer wg.Done()
 			randomUUID := uuid.New().String()
 
-			logData := data.LogData{
+			logData := types.LogData{
 				Level:      logLevels[rand.Intn(len(logLevels))],
 				Message:    fmt.Sprintf("Log message of %s", randomUUID),
 				ResourceID: fmt.Sprintf("resource-%s", randomUUID),

@@ -1,4 +1,4 @@
-package handlers
+package kafka
 
 import (
 	"context"
@@ -10,21 +10,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/phonghaido/log-ingestor/data"
+	"github.com/phonghaido/log-ingestor/types"
 	"github.com/segmentio/kafka-go"
 )
 
 type KafkaProducer struct {
-	KafkaConfig data.KafkaConfig
+	KafkaConfig types.KafkaConfig
 	Writer      kafka.Writer
 	AckChan     map[string]chan bool
 	AckMutex    sync.Mutex
 }
 
-func NewKafkaProducer(kafkaConfig data.KafkaConfig) *KafkaProducer {
+func NewKafkaProducer(kafkaConfig types.KafkaConfig) *KafkaProducer {
 	return &KafkaProducer{
 		KafkaConfig: kafkaConfig,
-		Writer:      data.NewKafkaWriter(kafkaConfig),
+		Writer:      types.NewKafkaWriter(kafkaConfig),
 		AckChan:     make(map[string]chan bool),
 	}
 }
@@ -79,7 +79,7 @@ func (p *KafkaProducer) CreateKafkaTopic() error {
 	return nil
 }
 
-func (p *KafkaProducer) ProduceLogKafka(logData data.LogData) (string, error) {
+func (p *KafkaProducer) ProduceLogKafka(logData types.LogData) (string, error) {
 	logBytes, err := json.Marshal(logData)
 	if err != nil {
 		log.Println("Error marshalling log data")

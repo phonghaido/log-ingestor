@@ -1,4 +1,4 @@
-package data
+package types
 
 type Metadata struct {
 	ParentResourceID string `json:"parentResourceId"`

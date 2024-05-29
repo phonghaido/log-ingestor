@@ -5,10 +5,10 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/phonghaido/log-ingestor/data"
+	"github.com/phonghaido/log-ingestor/types"
 )
 
-func ReadKafkaConfig() *data.KafkaConfig {
+func ReadKafkaConfig() *types.KafkaConfig {
 	partition, err := strconv.Atoi(os.Getenv("NUM_PARTITION"))
 	if err != nil {
 		log.Printf("Error reading env variable")
@@ -17,7 +17,7 @@ func ReadKafkaConfig() *data.KafkaConfig {
 	if err != nil {
 		log.Printf("Error reading env variable")
 	}
-	return data.NewKafkaConfig(
+	return types.NewKafkaConfig(
 		os.Getenv("KAFKA_BROKER"),
 		os.Getenv("KAFKA_TOPIC"),
 		partition,

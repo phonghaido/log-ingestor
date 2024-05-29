@@ -7,14 +7,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/phonghaido/log-ingestor/data"
-	"github.com/phonghaido/log-ingestor/handlers"
 	"github.com/phonghaido/log-ingestor/helpers"
+	"github.com/phonghaido/log-ingestor/kafka"
+	"github.com/phonghaido/log-ingestor/types"
 )
 
 var (
 	kafkaConfig   = helpers.ReadKafkaConfig()
-	kafkaProducer = handlers.NewKafkaProducer(*kafkaConfig)
+	kafkaProducer = kafka.NewKafkaProducer(*kafkaConfig)
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 }
 
 func HandlePostLog(c echo.Context) error {
-	var reqPayload data.LogData
+	var reqPayload types.LogData
 
 	if err := c.Bind(&reqPayload); err != nil {
 		return helpers.InvalidJSON(c)
