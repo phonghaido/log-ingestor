@@ -44,29 +44,35 @@ func NewKafkaConsumer(kafkaConfig helpers.KafkaConfig, logPersister LogPersister
 func (c *KafkaConsumer) ConsumeLogKafka(ctx context.Context) {
 	defer c.Reader.Close()
 	for {
-		msg, err := c.Reader.ReadMessage(ctx)
-		if err != nil {
-			log.Printf("Failed to read message: %s\n", err.Error())
-			continue
-		}
-		log.Printf("Received message: %s\n", string(msg.Value))
-		var logData types.LogData
-		err = json.Unmarshal(msg.Value, &logData)
-		if err != nil {
-			log.Printf("Error decoding message %s\n", err.Error())
-			continue
-		}
+		select {
+		case <-ctx.Done():
+			log.Printf("Context cancelled, stopping consumer")
+			return
+		default:
+			msg, err := c.Reader.ReadMessage(ctx)
+			if err != nil {
+				log.Printf("Failed to read message: %s\n", err.Error())
+				continue
+			}
+			log.Printf("Received message: %s\n", string(msg.Value))
+			var logData types.LogData
+			err = json.Unmarshal(msg.Value, &logData)
+			if err != nil {
+				log.Printf("Error decoding message %s\n", err.Error())
+				continue
+			}
 
-		if err := c.Persister.PersistLog(ctx, logData); err != nil {
-			continue
-		}
+			if err := c.Persister.PersistLog(ctx, logData); err != nil {
+				continue
+			}
 
-		log.Printf("Insert record %s to mongodb collection successfully", logData.TraceID)
+			log.Printf("Insert record %s to mongodb collection successfully", logData.TraceID)
 
-		err = SendAcknowledgement(logData.ID)
-		if err != nil {
-			log.Printf("Error sending acknowledgement: %s", err.Error())
-			continue
+			err = SendAcknowledgement(logData.ID)
+			if err != nil {
+				log.Printf("Error sending acknowledgement: %s", err.Error())
+				continue
+			}
 		}
 	}
 }
