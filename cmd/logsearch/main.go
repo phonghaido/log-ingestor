@@ -24,7 +24,7 @@ func main() {
 }
 
 func HandleGetHome(c echo.Context) error {
-	return c.File("./logsearch/templates/index.html")
+	return c.File("./templates/index.html")
 }
 
 func HandlePostSearch(c echo.Context) error {
@@ -54,7 +54,7 @@ func HandlePostSearch(c echo.Context) error {
 		return err
 	}
 
-	tmpl, err := template.ParseFiles("./logsearch/templates/result.html")
+	tmpl, err := template.ParseFiles("./templates/result.html")
 	if err != nil {
 		return err
 	}

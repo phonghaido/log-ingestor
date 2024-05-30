@@ -5,6 +5,7 @@ type Metadata struct {
 }
 
 type LogData struct {
+	ID         string   `json:"id,omitempty"`
 	Level      string   `json:"level"`
 	Message    string   `json:"message"`
 	ResourceID string   `json:"resourceId"`

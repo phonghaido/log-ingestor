@@ -25,11 +25,11 @@ func NewAPIError(statusCode int, err error) APIError {
 	}
 }
 
-func InvalidJSON(c echo.Context) error {
+func InvalidJSON() error {
 	return NewAPIError(http.StatusBadRequest, fmt.Errorf("invalid json data request"))
 }
 
-func ValidateLogData(c echo.Context, logData types.LogData) error {
+func ValidateLogData(logData types.LogData) error {
 	if logData.Level == "" {
 		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'level'"))
 	}

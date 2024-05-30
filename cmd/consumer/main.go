@@ -19,6 +19,8 @@ func main() {
 	}
 
 	logPersister := db.NewMongoDBLogPersister(mongoClient)
+
 	kafkaConsumer := kafka.NewKafkaConsumer(*kafkaConfig, logPersister)
+	log.Println("Waiting for messages...")
 	kafkaConsumer.ConsumeLogKafka(ctx)
 }

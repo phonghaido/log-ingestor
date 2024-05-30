@@ -10,6 +10,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
+	"github.com/phonghaido/log-ingestor/helpers"
 	"github.com/phonghaido/log-ingestor/types"
 	"github.com/segmentio/kafka-go"
 )
@@ -19,15 +20,23 @@ type LogPersister interface {
 }
 
 type KafkaConsumer struct {
-	KafkaConfig types.KafkaConfig
+	KafkaConfig helpers.KafkaConfig
 	Reader      kafka.Reader
 	Persister   LogPersister
 }
 
-func NewKafkaConsumer(kafkaConfig types.KafkaConfig, logPersister LogPersister) *KafkaConsumer {
+func NewKafkaReader(kafkaConfig helpers.KafkaConfig) kafka.Reader {
+	return *kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{kafkaConfig.KafkaBroker},
+		Topic:   kafkaConfig.Topic,
+		GroupID: "log-processor",
+	})
+}
+
+func NewKafkaConsumer(kafkaConfig helpers.KafkaConfig, logPersister LogPersister) *KafkaConsumer {
 	return &KafkaConsumer{
 		KafkaConfig: kafkaConfig,
-		Reader:      types.NewKafkaReader(kafkaConfig),
+		Reader:      NewKafkaReader(kafkaConfig),
 		Persister:   logPersister,
 	}
 }
@@ -54,7 +63,7 @@ func (c *KafkaConsumer) ConsumeLogKafka(ctx context.Context) {
 
 		log.Printf("Insert record %s to mongodb collection successfully", logData.TraceID)
 
-		err = SendAcknowledgement(logData.TraceID)
+		err = SendAcknowledgement(logData.ID)
 		if err != nil {
 			log.Printf("Error sending acknowledgement: %s", err.Error())
 			continue

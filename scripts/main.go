@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"sync"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 	url := "http://localhost:3000/log"
-	numReqs := 1000
+	numReqs := 10
 	logLevels := []string{"info", "error", "debug", "warning"}
 
 	var wg sync.WaitGroup
@@ -28,6 +29,9 @@ func main() {
 			defer wg.Done()
 			randomUUID := uuid.New().String()
 
+			metadata := types.Metadata{
+				ParentResourceID: fmt.Sprintf("parent-resource-%s", randomUUID),
+			}
 			logData := types.LogData{
 				Level:      logLevels[rand.Intn(len(logLevels))],
 				Message:    fmt.Sprintf("Log message of %s", randomUUID),
@@ -36,6 +40,7 @@ func main() {
 				TraceID:    fmt.Sprintf("trace-%s", randomUUID),
 				SpanID:     fmt.Sprintf("span-%s", randomUUID),
 				Commit:     fmt.Sprintf("commit-%s", randomUUID),
+				Metadata:   metadata,
 			}
 
 			logBytes, err := json.Marshal(logData)
@@ -52,7 +57,11 @@ func main() {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				errCh <- fmt.Errorf("unexpected error code: %d", resp.StatusCode)
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					errCh <- fmt.Errorf("error reading response body: %s", err.Error())
+				}
+				errCh <- fmt.Errorf("unexpected error code: %d, response body: %s", resp.StatusCode, string(body))
 				return
 			}
 		}(i)

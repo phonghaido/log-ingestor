@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/phonghaido/log-ingestor/helpers"
@@ -39,19 +40,20 @@ func HandlePostLog(c echo.Context) error {
 	var reqPayload types.LogData
 
 	if err := c.Bind(&reqPayload); err != nil {
-		return helpers.InvalidJSON(c)
+		return helpers.InvalidJSON()
 	}
 
-	if err := helpers.ValidateLogData(c, reqPayload); err != nil {
+	if err := helpers.ValidateLogData(reqPayload); err != nil {
 		return err
 	}
 
-	traceID, err := kafkaProducer.ProduceLogKafka(reqPayload)
+	reqPayload.ID = uuid.New().String()
+	err := kafkaProducer.ProduceLogKafka(c, reqPayload)
 	if err != nil {
 		return err
 	}
 
-	ok, err := kafkaProducer.WaitForAck(traceID, 60*time.Second)
+	ok, err := kafkaProducer.WaitForAck(reqPayload.ID, 60*time.Second)
 	if !ok {
 		return err
 	}
