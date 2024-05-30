@@ -3,8 +3,10 @@ package helpers
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/phonghaido/log-ingestor/types"
 )
 
 type APIError struct {
@@ -25,6 +27,44 @@ func NewAPIError(statusCode int, err error) APIError {
 
 func InvalidJSON(c echo.Context) error {
 	return NewAPIError(http.StatusBadRequest, fmt.Errorf("invalid json data request"))
+}
+
+func ValidateLogData(c echo.Context, logData types.LogData) error {
+	if logData.Level == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'level'"))
+	}
+
+	if logData.Commit == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'commit'"))
+	}
+
+	if logData.Message == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'message'"))
+	}
+
+	if logData.ResourceID == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'resource_id'"))
+	}
+
+	if logData.SpanID == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'span_id'"))
+	}
+
+	if logData.Timestamp == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'timestamp'"))
+	} else if _, err := time.Parse(time.RFC3339, logData.Timestamp); err != nil {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("timestamp should be in RFC3339 format"))
+	}
+
+	if logData.TraceID == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'trace_id'"))
+	}
+
+	if logData.Metadata.ParentResourceID == "" {
+		return NewAPIError(http.StatusBadRequest, fmt.Errorf("missing data 'metadata parent_resource_id'"))
+	}
+
+	return nil
 }
 
 type APIFunc func(c echo.Context) error

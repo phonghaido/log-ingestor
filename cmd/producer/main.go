@@ -41,6 +41,11 @@ func HandlePostLog(c echo.Context) error {
 	if err := c.Bind(&reqPayload); err != nil {
 		return helpers.InvalidJSON(c)
 	}
+
+	if err := helpers.ValidateLogData(c, reqPayload); err != nil {
+		return err
+	}
+
 	traceID, err := kafkaProducer.ProduceLogKafka(reqPayload)
 	if err != nil {
 		return err
